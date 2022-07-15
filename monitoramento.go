@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -61,7 +64,9 @@ func showMenu() {
 func startMonitoring() {
 	fmt.Println("Monitorando...")
 	round := 1
-	sites := []string{"https://www.alura.com.br", "https://random-status-code.herokuapp.com", "https://www.uol.com.br"}
+	//sites := []string{"https://www.alura.com.br", "https://random-status-code.herokuapp.com", "https://www.uol.com.br"}
+
+	sites := readSites()
 
 	for i := 0; i < monitoramentos; i++ {
 		fmt.Println("Monitoramento:", round) //adicionando repetição e tempo
@@ -78,11 +83,44 @@ func startMonitoring() {
 }
 
 func testSites(site string) {
-	resp, _ := http.Get(site)
+	resp, err := http.Get(site)
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro:", err)
+	}
 
 	if resp.StatusCode == 200 {
 		fmt.Println("O site:", site, "foi carregado com sucesso")
 	} else {
 		fmt.Println("o site", site, "está com problema, Status Code:", resp.StatusCode)
 	}
+}
+
+//lendo arquivo de texto:
+func readSites() []string {
+
+	var sites []string
+
+	arquivo, err := os.Open("sites.txt")
+	//arquivo, err := ioutil.ReadFile("sites.txt") //le o arquivo todo
+
+	if err != nil {
+		fmt.Println("Ocorreu um erro:", err)
+	}
+
+	leitor := bufio.NewReader(arquivo)
+
+	for {
+		linha, err := leitor.ReadString('\n') //pegando até o \n
+		linha = strings.TrimSpace(linha)      //tira o \n e espaço em branco no final das linhas
+
+		sites = append(sites, linha)
+
+		if err == io.EOF {
+			break
+		}
+
+	}
+	arquivo.Close()
+	return sites
 }
